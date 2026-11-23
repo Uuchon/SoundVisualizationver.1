@@ -43,6 +43,9 @@ function phonFromSPL(freq, spl) {
   }
   return (lo + hi) / 2;
 }
+// 研究用スイッチ: URL に ?iso=0 を付けると、明度を ISO 226 補正なしで表示。通常は補正あり
+let LOUD_ISO = true;
+try { if (new URLSearchParams(location.search).get('iso') === '0') { LOUD_ISO = false; } } catch (e) {}
 const PHON_MAX = 90, FMIN = 20, FMAX = 20000;
 let splOffset = 100;                                   // 0 dBFS を何 dB SPL とみなすか
 const briFromPhon = phon => 42 + (100 - 42) * clamp((phon / PHON_MAX - 0.02) / 0.98, 0, 1);   // 下限42%: 暗い音でも色が見えるように
@@ -594,7 +597,7 @@ function analyze() {
   let mx = 0, mi = 0;
   for (let i = 1; i < len; i++) { if (sp[i] > mx) { mx = sp[i]; mi = i; } }
   S.domA = mx / 255; S.domF = mi * nyq / len;
-  S.loud = S.domA > 0 ? clamp(phonFromSPL(S.domF, -100 + S.domA * DB_SPAN + splOffset) / PHON_MAX, 0, 1) : 0;
+  S.loud = S.domA > 0 ? clamp((LOUD_ISO ? phonFromSPL(S.domF, -100 + S.domA * DB_SPAN + splOffset) : (-100 + S.domA * DB_SPAN + splOffset)) / PHON_MAX, 0, 1) : 0;
 
   let tot = 0, wf = 0;
   let wOld = 0, tOld = 0;                          // 旧定義（byte値を重みにしたもの。比較用）

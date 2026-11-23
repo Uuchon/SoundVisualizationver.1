@@ -284,10 +284,14 @@ function phonFromSPL(freq, spl) {
 }
 
 // amp: 0〜1 (FFTバイト値/255)  →  戻り値: 0〜1 (phon / PHON_MAX)
+// 研究用スイッチ: URL に ?iso=0 を付けると、明度を ISO 226 補正なし（音圧そのまま）で表示。通常は補正あり
+let LOUD_ISO = true;
+try { if (new URLSearchParams(location.search).get('iso') === '0') { LOUD_ISO = false; } } catch (e) {}
 function getLoudnessPerceived(freq, amp) {
   if (!freq || !amp) return 0;
   const dbfs = -100 + amp * DB_SPAN;      // AnalyserNode 既定の min/maxDecibels (-100〜-30)
   const spl = dbfs + splOffset;
+  if (!LOUD_ISO) { return constrain(spl / PHON_MAX, 0, 1); }   // 研究用: 補正なし（?iso=0）
   return constrain(phonFromSPL(freq, spl) / PHON_MAX, 0, 1);
 }
 
